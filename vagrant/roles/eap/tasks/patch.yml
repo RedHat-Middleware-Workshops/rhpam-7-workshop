@@ -1,0 +1,32 @@
+---
+# Installs an EAP Patch
+
+- name: Set EAP Patch Artifact Facts
+  set_fact:
+    eap_patch_artifact_url: "{{ eap_patch_artifact_repo + '/' + eap_patch_artifact_name }}"
+    eap_patch_artifact_dl_dest: "{{ '/tmp/' + eap_patch_artifact_name }}"
+
+- name: Debug EAP Patch Artifact URL
+  debug:
+    msg: "{{ eap_patch_artifact_url }}"
+
+- name: Debug EAP Download Destination
+  debug:
+    msg: "{{ eap_patch_artifact_dl_dest }}"
+
+#- name: Download EAP Patch Artifact
+#  get_url:
+#    url: "{{ eap_patch_artifact_url }}"
+#    dest: "{{ eap_patch_artifact_dl_dest }}"
+
+- name: Copy EAP Patch artifact
+  copy:
+    src: "{{ eap_patch_artifact_url }}"
+    dest: "{{ eap_patch_artifact_dl_dest }}"
+
+- name: Apply JBoss EAP patch
+  command: /opt/eap/bin/jboss-cli.sh --command='patch apply {{ eap_patch_artifact_dl_dest }} --override-modules'
+  args:
+    creates: /opt/eap/modules/system/layers/base/.overlays/layer-base-jboss-eap-7.1.3.CP/org/jboss/as/version/main/wildfly-version-3.0.16.Final-redhat-1.jar
+  become: true
+  become_user: "{{ jboss_user }}"

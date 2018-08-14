@@ -1,0 +1,14 @@
+[Unit]
+Description=JBoss Enterprise Application Platform
+After=syslog.target network.target
+
+[Service]
+Environment=JBOSS_USER=jboss
+Environment=JBOSS_HOME=/opt/eap
+Type=forking
+ExecStart=/opt/eap/bin/init.d/jboss-eap-rhel.sh start
+ExecStop=/opt/eap/bin/init.d/jboss-eap-rhel.sh stop
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target

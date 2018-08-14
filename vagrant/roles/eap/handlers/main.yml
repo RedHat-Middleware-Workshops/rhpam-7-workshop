@@ -1,0 +1,10 @@
+- name: Reload systemd
+  become: yes
+  become_user: root
+  command: systemctl daemon-reload
+
+- name: Start and Enable jboss-eap Service
+  service:
+    name: jboss-eap-standalone.service
+    state: started
+    enabled: yes

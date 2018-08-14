@@ -1,0 +1,4 @@
+---
+kieserver_artifact_name: rhpam-7.0.1-kie-server-ee7.zip
+
+kieserver_unarchive_temp_dest: /tmp/rhpam

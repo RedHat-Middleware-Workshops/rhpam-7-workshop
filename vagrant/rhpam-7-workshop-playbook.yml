@@ -1,0 +1,15 @@
+- hosts: default
+  remote_user: vagrant
+  become: true
+  become_method: sudo
+  become_user: root
+  roles:
+    - centos
+    - gnome
+    - rhpam-7-business-central
+    - rhpam-7-kie-server
+  tags:
+    - centos
+    - gnome
+    - rhpam-7-business-central
+    - rhpam-7-kie-server

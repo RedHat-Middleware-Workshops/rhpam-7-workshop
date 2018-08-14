@@ -1,0 +1,96 @@
+---
+# Installs a BPM
+# Corresponds to docker layer https://github.com/sherl0cks/docker-bpms
+
+- name: Set BPM Suite Artifact Facts
+  set_fact:
+    bpms_artifact_url: "{{ bpms_artifact_repo + '/' + bpms_artifact_name }}"
+    bpms_artifact_dl_dest: "{{ '/tmp/' + bpms_artifact_name }}"
+
+- name: Debug BPM Suite Artifact URL
+  debug:
+    msg: "{{ bpms_artifact_url }}"
+
+- name: Debug BPM Suite Artifact Download Destination
+  debug:
+    msg: "{{ bpms_artifact_dl_dest }}"
+
+#- name: Download BPM Suite Artifact
+#  get_url:
+#    url: "{{ bpms_artifact_url }}"
+#    dest: "{{ bpms_artifact_dl_dest }}"
+
+- name: Check that the somefile.conf exists
+  stat:
+    path: "/opt/eap/bin/kie.policy"
+  register: stat_result
+
+- name: Debug BPM Suite Artifact URL
+  debug:
+    msg: "My message, BPM Suite exists {{ stat_result.stat.exists }}"
+
+
+- name: Copy BPMSuite artifact
+  copy:
+    src: "{{ bpms_artifact_url }}"
+    dest: "{{ bpms_artifact_dl_dest }}"
+  when: stat_result.stat.exists == False
+
+- name: Create RHPAM Unzip Directory
+  become: true
+  become_user: root
+  file:
+    path: "{{ bpms_unarchive_temp_dest }}"
+    owner: "{{ jboss_user }}"
+    group: "{{ jboss_group }}"
+    state: directory
+    mode: "755"
+  when: stat_result.stat.exists == False
+
+# This should overlay the BPM download over EAP, intentionally overwriting some files in the process
+- name: Extract BPM Suite
+  unarchive:
+    src: "{{ bpms_artifact_dl_dest }}"
+    dest: "{{ bpms_unarchive_temp_dest }}"
+    creates: "{{ bpms_unarchive_temp_dest }} + '/jboss-eap-7.1/bin/kie.policy'"
+    copy: no
+    owner: "{{ jboss_user }}"
+    group: "{{ jboss_group }}"
+  when: stat_result.stat.exists == False
+
+- name: Move BPM Suite installation
+  shell: rsync -av /tmp/rhpam/jboss-eap-7.1/* /opt/eap && rm -rf /tmp/rhpam/jboss-eap-7.1
+  args:
+    creates: "/opt/eap/bin/kie.policy"
+
+- name: Set adminUser
+  lineinfile:
+    path: /opt/eap/standalone/configuration/application-users.properties
+    regexp: '^adminUser'
+    line: adminUser=ea506de12a407a3819316eff7a577b09
+
+- name: Set pamAdmin
+  lineinfile:
+    path: /opt/eap/standalone/configuration/application-users.properties
+    regexp: '^pamAdmin'
+    line: pamAdmin=ea971d4d2547be1368f0bd39d477ec0e
+
+- name: Set adminUser groups
+  lineinfile:
+    path: /opt/eap/standalone/configuration/application-roles.properties
+    regexp: '^adminUser'
+    line: adminUser=admin,developer,analyst,user,manager,reviewer,kiemgmt,kie-server,task-group
+
+- name: Set pamAdmin groups
+  lineinfile:
+    path: /opt/eap/standalone/configuration/application-roles.properties
+    regexp: '^pamAdmin'
+    line: pamAdmin=admin,developer,analyst,user,manager,reviewer,kiemgmt,kie-server,task-group
+
+
+
+
+
+- include: java_opts.yml
+
+### TODO - feels like there should be a start service here but the notify happens at the end, which is odd to me

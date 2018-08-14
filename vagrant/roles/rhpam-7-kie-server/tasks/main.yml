@@ -1,0 +1,65 @@
+---
+#- name: Remove Business Central WAR
+#  file:
+#    state: absent
+#    path: "{{ bpms_business_central_location }}"
+
+#- name: Remove Business Central Deployment Marker
+#  file:
+#    state: absent
+#    path: "{{ bpms_business_central_location + '.dodeploy' }}"
+
+#- name: Remove Dashbuilder WAR
+#  file:
+#    state: absent
+#    path: "{{ bpms_dashbuilder_location }}"
+
+#- name: Remove Dashbuilder Deployment Marker
+#  file:
+#    state: absent
+#    path: "{{ bpms_dashbuilder_location + '.dodeploy' }}"
+
+- name: Set BPM Suite Artifact Facts
+  set_fact:
+    kieserver_artifact_url: "{{ bpms_artifact_repo + '/' + kieserver_artifact_name }}"
+    kieserver_artifact_dl_dest: "{{ '/tmp/' + kieserver_artifact_name }}"
+
+- name: Check that the somefile.conf exists
+  stat:
+    path: "/opt/eap/standalone/deployments//kie-server.war/WEB-INF/web.xml"
+  register: kieserver_stat_result
+
+- name: Copy KIE-Server artifact
+  copy:
+    src: "{{ kieserver_artifact_url }}"
+    dest: "{{ kieserver_artifact_dl_dest }}"
+  when: kieserver_stat_result.stat.exists == False
+
+- name: Create KIE-Server Unzip Directory
+  become: true
+  become_user: root
+  file:
+    path: "{{ kieserver_unarchive_temp_dest }}"
+    owner: "{{ jboss_user }}"
+    group: "{{ jboss_group }}"
+    state: directory
+    mode: "755"
+  when: kieserver_stat_result.stat.exists == False
+
+# This should overlay the BPM download over EAP, intentionally overwriting some files in the process
+- name: Extract KIE-Server
+  unarchive:
+    src: "{{ kieserver_artifact_dl_dest }}"
+    dest: "{{ kieserver_unarchive_temp_dest }}"
+    creates: "{{ kieserver_unarchive_temp_dest }} + '/kie-server.war'"
+    copy: no
+    owner: "{{ jboss_user }}"
+    group: "{{ jboss_group }}"
+  when: kieserver_stat_result.stat.exists == False
+
+- name: Move KIE-Server installation
+  shell: mv /tmp/rhpam/kie-server.war /opt/eap/standalone/deployments/kie-server.war
+  args:
+    creates: /opt/eap/standalone/deployments/kie-server.war/WEB-INF/web.xml
+
+- include: java_opts.yml

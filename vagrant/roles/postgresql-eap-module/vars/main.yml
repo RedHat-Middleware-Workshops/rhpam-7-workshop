@@ -1,0 +1,8 @@
+---
+postgresql:
+  jdbc:
+    driver:
+      base_url: https://jdbc.postgresql.org/download/
+      name: postgresql-9.4-1206-jdbc42.jar
+    module:
+      dest: /opt/eap/modules/org/postgresql/main/

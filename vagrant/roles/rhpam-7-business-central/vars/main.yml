@@ -1,0 +1,14 @@
+---
+# Installs a BPM Suite via Red Hat internal downloads
+# Update these to reflect your organizations artifact repos
+
+#bpms_artifact_repo: http://files.justinholmes.co
+bpms_artifact_repo: /Volumes/JetDrive/Installables/JBoss/RHPAM7/7.0.1
+bpms_artifact_name: rhpam-7.0.1-business-central-eap7-deployable.zip
+
+bpms_unarchive_temp_dest: /tmp/rhpam
+
+bpms_kie_server_location: /opt/eap/standalone/deployments/kie-server.war
+
+bpms_expose_git_daemon: true
+bpms_expose_ssh_daemon: true

@@ -1,0 +1,3 @@
+---
+dependencies:
+   - { role: rhpam-7-base }
